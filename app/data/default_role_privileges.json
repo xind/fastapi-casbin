@@ -1,0 +1,12 @@
+{
+    "role_privileges": [
+        {"role": "Administrator", "privileges": [
+            {"name": "/*", "actions": ["GET", "POST", "PUT", "DELETE"]}
+        ]},
+        {"role": "Standard User", "privileges": [
+            {"name": "/auth/users", "actions": ["GET"]},
+            {"name": "/auth/roles", "actions": ["GET"]}
+        ]},
+        {"role": "Guest", "privileges": []}
+    ]
+}

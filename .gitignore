@@ -1,0 +1,19 @@
+.idea
+.vscode
+__pycache__
+.pytest_cache
+dist
+site
+.log
+log.txt
+venv
+
+# vim temporary files
+*~
+.*.sw?
+.cache
+
+# macOS
+.DS_Store
+
+ssl
