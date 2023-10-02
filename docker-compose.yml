@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     nginx:
-        image: docker.io/library/nginx:latest
+        image: docker.io/library/nginx:1.25.2
         ports:
             - ${PORT}:443
         volumes:
