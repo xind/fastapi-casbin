@@ -2,6 +2,7 @@
     "privileges": [
         {"name": "/favicon.ico", "description": "", "actions": ["GET"], "system": ["GET"]},
         {"name": "/docs", "description": "", "actions": ["GET"], "system": ["GET"]},
+        {"name": "/redoc", "description": "", "actions": ["GET"], "system": ["GET"]},
         {"name": "/openapi.json", "description": "", "actions": ["GET"], "system": ["GET"]},
 
         {"name": "/auth/login", "description": "Allows users to authenticate and log in to the system.", "actions": ["POST"], "system": ["POST"]},
