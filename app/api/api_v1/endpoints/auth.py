@@ -44,6 +44,13 @@ async def login(user: UserLogin, response: Response):
     response.set_cookie(key="refresh_token", value=create_refresh_token(user_id), max_age=get_setting().REFRESH_TOKEN_EXPIRE_MINUTES*60, httponly=True, secure=True)
     return user
 
+@router.get("/logout")
+async def logout(response: Response):
+    response.status_code = status.HTTP_204_NO_CONTENT
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return response
+
 @router.get("/users", response_model=list[UserInDBBase])
 async def get_users():
     return get_users_in_db()

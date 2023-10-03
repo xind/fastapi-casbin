@@ -6,6 +6,7 @@
         {"name": "/openapi.json", "description": "", "actions": ["GET"], "system": ["GET"]},
 
         {"name": "/auth/login", "description": "Allows users to authenticate and log in to the system.", "actions": ["POST"], "system": ["POST"]},
+        {"name": "/auth/logout", "description": "Allows users to log out from the system.", "actions": ["GET"], "system": ["GET"]},
         {"name": "/auth/token", "description": "Renews the access token.", "actions": ["POST"], "system": ["POST"]},
         {"name": "/auth/password/{id}", "description": "Updates user password by ID.", "actions": ["PUT"], "system": ["PUT"]},
         {"name": "/auth/admin/{id}", "description": "Updates user information by ID.", "actions": ["PUT"], "system": ["PUT"]},
