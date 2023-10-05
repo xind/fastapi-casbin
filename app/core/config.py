@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_SECRET_KEY: str = "another_secret" # TODO: change this with stronger secret
 
     PROJECT_NAME: str = "FastAPI RBAC application"
-    PROJECT_VERSION: str = "0.1.0"
+    PROJECT_VERSION: str = "0.2.0"
 
     MONGO_HOSTNAME: str
     MONGO_PORT: int = 27017
