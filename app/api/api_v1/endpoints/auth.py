@@ -2,7 +2,6 @@ import logging
 
 from core.utils import valid_user_id
 from core.errors import return_error
-from core.config import get_setting
 
 from fastapi import APIRouter, HTTPException, Request, Response, UploadFile, status
 from fastapi.responses import ORJSONResponse
@@ -16,33 +15,42 @@ from core.database import authenticate_user, delete_icon_in_db, delete_role_in_d
 logger = logging.getLogger('main')
 router = APIRouter()
 
+
 @router.post('/token', summary="Renew the access token", status_code=status.HTTP_201_CREATED, response_model=dict)
 async def get_token(request: Request):
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
         access_token = refresh_access_token(refresh_token)
-        response = ORJSONResponse(content={"message": "Access token created successfully"})
-        response.set_cookie(key="access_token", value=access_token, max_age=get_setting().REFRESH_TOKEN_EXPIRE_MINUTES*60, httponly=True, secure=True)
+        response = ORJSONResponse(
+            content={"message": "Access token created successfully"})
+        response.set_cookie(key="access_token",
+                            value=access_token, httponly=True, secure=True)
         return response
     return return_error("Not authenticated", status.HTTP_403_FORBIDDEN)
 
-# TODO: Accept the expire time of refresh token from front-end
+
 @router.post("/login", response_model=User)
-async def login(user: UserLogin, response: Response):
-    user_in_db = authenticate_user(user.username, user.password)
+async def login(user_in: UserLogin, response: Response):
+    user_in_db = authenticate_user(user_in.username, user_in.password)
     if not user_in_db:
         msg = "Invalid username or password"
-        logger.warning(f"{msg}, username={user.username}")
+        logger.warning(f"{msg}, username={user_in.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=msg)
 
     user_id = str(user_in_db.id)
-    user = User(**user_in_db.model_dump(),
-                privileges=get_privileges_for_user(user_id))
 
-    response.set_cookie(key="access_token", value=create_access_token(user_id), max_age=get_setting().REFRESH_TOKEN_EXPIRE_MINUTES*60, httponly=True, secure=True)
-    response.set_cookie(key="refresh_token", value=create_refresh_token(user_id), max_age=get_setting().REFRESH_TOKEN_EXPIRE_MINUTES*60, httponly=True, secure=True)
-    return user
+    expires = None if user_in.token_expiration_seconds == 0 else user_in.token_expiration_seconds
+    refresh_token, refresh_token_expiration_datetime = create_refresh_token(
+        user_id, expires)
+    response.set_cookie(key="refresh_token", value=refresh_token,
+                        expires=refresh_token_expiration_datetime, httponly=True, secure=True)
+    response.set_cookie(key="access_token", value=create_access_token(
+        user_id, refresh_token_expiration_datetime), expires=None, httponly=True, secure=True)
+
+    user_in = User(**user_in_db.model_dump(),
+                   privileges=get_privileges_for_user(user_id))
+    return user_in
 
 @router.get("/logout")
 async def logout(response: Response):

@@ -51,13 +51,22 @@ class UserInfo(UserBase):
     lastname: str | None = None
     disabled: bool = False
 
-class UserLogin(UserBase):
+class UserPassword(UserBase):
     password: str
 
-class UserUpdatePassword(UserLogin):
+class UserLogin(UserPassword):
+    token_expiration_seconds: int
+
+    @field_validator('token_expiration_seconds')
+    @classmethod
+    def token_expiration_seconds_postive(cls, v: int) -> int:
+        assert v >= 0, 'must >= 0'
+        return v
+
+class UserUpdatePassword(UserPassword):
     new_password: str
 
-class UserCreate(UserInfo, UserLogin):
+class UserCreate(UserInfo, UserPassword):
     """Properties to receive on item creation."""
     pass
 
@@ -72,6 +81,6 @@ class User(UserInDBBase):
     """Properties to return to client."""
     privileges: list[PrivilegeBase]
 
-class UserInDB(UserInDBBase, UserLogin):
+class UserInDB(UserInDBBase, UserPassword):
     """Additional properties stored in DB."""
     pass

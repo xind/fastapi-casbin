@@ -57,8 +57,7 @@ class JsonConfigSettingsSource(PydanticBaseSettingsSource):
 class Settings(BaseSettings):
 
     API_V1_STR: str = "/api/v1"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+    TOKEN_EXPIRE_SECONDS: int = 30 * 60  # 30 minutes
     JWT_ALGORITHM: str = "HS256"
     JWT_SECRET_KEY: str = "secret" # TODO: change this with stronger secret
     JWT_REFRESH_SECRET_KEY: str = "another_secret" # TODO: change this with stronger secret

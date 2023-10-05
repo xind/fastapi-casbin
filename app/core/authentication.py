@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 import jwt
@@ -30,28 +30,36 @@ def decode_jwt_token(token: str, secret_key) -> dict:
         logger_access.warning(msg)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=msg)
 
-def create_access_token(sub: str, expires_delta: timedelta = None) -> str:
-    if expires_delta is not None:
-        expires = datetime.utcnow() + expires_delta
-    else:
-        expires = datetime.utcnow() + timedelta(minutes=get_setting().ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode = {"sub": sub, "exp": expires}
-    encoded_jwt = jwt.encode(to_encode, get_setting().JWT_SECRET_KEY, get_setting().JWT_ALGORITHM)
+def create_access_token(sub: str, refresh_token_expiration_datetime: datetime = None) -> str:
+    token_expiration_datetime = datetime.now(
+        timezone.utc) + timedelta(seconds=get_setting().TOKEN_EXPIRE_SECONDS)
+
+    # If a refresh token expiration datetime is provided and it's earlier than the default expiration, use it instead.
+    if refresh_token_expiration_datetime and refresh_token_expiration_datetime < token_expiration_datetime:
+        token_expiration_datetime = refresh_token_expiration_datetime
+
+    to_encode = {"sub": sub, "exp": token_expiration_datetime}
+    encoded_jwt = jwt.encode(to_encode, get_setting(
+    ).JWT_SECRET_KEY, get_setting().JWT_ALGORITHM)
     logger_access.info(f"Access token created, sub={sub}")
     return encoded_jwt
 
-def create_refresh_token(sub: str, expires_delta: timedelta = None) -> str:
-    if expires_delta is not None:
-        expires = datetime.utcnow() + expires_delta
-    else:
-        expires = datetime.utcnow() + timedelta(minutes=get_setting().REFRESH_TOKEN_EXPIRE_MINUTES)
 
-    to_encode = {"sub": sub, "exp": expires}
-    encoded_jwt = jwt.encode(to_encode, get_setting().JWT_REFRESH_SECRET_KEY, get_setting().JWT_ALGORITHM)
+def create_refresh_token(sub: str, expiration_in_seconds: int = 0) -> str:
+    if expiration_in_seconds is None:
+        expiration_in_seconds = get_setting().TOKEN_EXPIRE_SECONDS
+    token_expiration_datetime = datetime.now(
+        timezone.utc) + timedelta(seconds=expiration_in_seconds)
+
+    to_encode = {"sub": sub, "exp": token_expiration_datetime}
+    encoded_jwt = jwt.encode(to_encode, get_setting(
+    ).JWT_REFRESH_SECRET_KEY, get_setting().JWT_ALGORITHM)
     logger_access.info(f"Refresh token created, sub={sub}")
-    return encoded_jwt
+    return encoded_jwt, token_expiration_datetime
+
 
 def refresh_access_token(refresh_token) -> str:
-    sub = decode_jwt_token(refresh_token, get_setting().JWT_REFRESH_SECRET_KEY)['sub']
-    return create_access_token(sub)
+    payload = decode_jwt_token(
+        refresh_token, get_setting().JWT_REFRESH_SECRET_KEY)
+    return create_access_token(payload['sub'], datetime.fromtimestamp(payload['exp'], timezone.utc))
