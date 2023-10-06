@@ -30,7 +30,7 @@ async def get_token(request: Request):
 
 
 @router.post("/login", response_model=User)
-async def login(user_in: UserLogin, response: Response):
+def login(user_in: UserLogin, response: Response):
     user_in_db = authenticate_user(user_in.username, user_in.password)
     if not user_in_db:
         msg = "Invalid username or password"
@@ -60,11 +60,11 @@ async def logout(response: Response):
     return response
 
 @router.get("/users", response_model=list[UserInDBBase])
-async def get_users():
+def get_users():
     return get_users_in_db()
 
 @router.post('/users', summary="Create new user", status_code=status.HTTP_201_CREATED, response_model=dict)
-async def create_user(user: UserCreate):
+def create_user(user: UserCreate):
     # Querying database to check if user already exist
     if get_user_by_username(user.username):
         msg = "User with the same username already exists"
@@ -78,7 +78,7 @@ async def create_user(user: UserCreate):
     return {"message": "User created successfully", "id": user_id}
 
 @router.get("/users/{user_id}", response_model=User)
-async def get_user(user_id: str):
+def get_user(user_id: str):
     valid_user_id(user_id)
     user_in_db = get_user_by_id(user_id)
     if user_in_db:
@@ -91,7 +91,7 @@ async def get_user(user_id: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
 
 @router.put("/users/{user_id}", response_model=ResponseMessage)
-async def update_user(user_id: str, user: UserCreate):
+def update_user(user_id: str, user: UserCreate):
     valid_user_id(user_id)
     valid_user(user_id, user.username, user.password)
 
@@ -101,7 +101,7 @@ async def update_user(user_id: str, user: UserCreate):
     return {"message": "User information remains unchanged"}
 
 @router.put("/admin/{user_id}", response_model=ResponseMessage)
-async def modify_user_info(user_id: str, user: UserInfo):
+def modify_user_info(user_id: str, user: UserInfo):
     valid_user_id(user_id)
     valid_user(user_id, user.username, '', False)
 
@@ -111,7 +111,7 @@ async def modify_user_info(user_id: str, user: UserInfo):
     return {"message": "User information remains unchanged"}
 
 @router.delete("/users/{user_id}", response_model=ResponseMessage)
-async def delete_user(user_id: str):
+def delete_user(user_id: str):
     valid_user_id(user_id)
     result = delete_user_in_db(user_id)
     if result:
@@ -121,14 +121,14 @@ async def delete_user(user_id: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
 
 @router.put("/password/{user_id}", summary="Change password", response_model=ResponseMessage)
-async def update_password(user_id: str, user: UserUpdatePassword):
+def update_password(user_id: str, user: UserUpdatePassword):
     valid_user_id(user_id)
     valid_user(user_id, user.username, user.password)
     original_user = update_user_field(user_id, {"password": get_password_hash(user.new_password)})
     return {"message": "User password updated successfully"}
 
 @router.put("/icons/{user_id}", summary="Upload a JPEG or PNG image file with a size not exceeding 16MB, intended for use as a profile icon", response_model=ResponseMessage)
-async def add_user_icon(user_id: str, icon: UploadFile):
+def add_user_icon(user_id: str, icon: UploadFile):
     valid_user_id(user_id)
 
     # Valid the icon image
@@ -144,7 +144,7 @@ async def add_user_icon(user_id: str, icon: UploadFile):
         logger.warning(f"Uploaded file exceeds 16MB limit, user_id={user_id}, file_size={file_size}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Uploaded file exceeds 16MB limit. Please upload a smaller JPEG or PNG image")
     # move the cursor back to the beginning
-    await icon.seek(0)
+    icon.file.seek(0)
 
     original_user = update_user_field(user_id, {"has_icon": True})
     if original_user is None:
@@ -163,7 +163,7 @@ async def add_user_icon(user_id: str, icon: UploadFile):
         return {"message": "Failed to add icon"}
 
 @router.get("/icons/{user_id}")
-async def get_user_icon(user_id: str):
+def get_user_icon(user_id: str):
     valid_user_id(user_id)
     icon = get_icon_in_db(user_id)
     if icon:
@@ -173,7 +173,7 @@ async def get_user_icon(user_id: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
 
 @router.delete("/icons/{user_id}", response_model=ResponseMessage)
-async def delete_user_icon(user_id: str):
+def delete_user_icon(user_id: str):
     valid_user_id(user_id)
     result = delete_icon_in_db(user_id)
     if result:
@@ -184,17 +184,17 @@ async def delete_user_icon(user_id: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
 
 @router.get("/privileges", response_model=list[Privilege])
-async def get_privileges():
+def get_privileges():
     response = get_privileges_in_db()
     return response
 
 @router.get("/roles", response_model=list[RoleCreate])
-async def get_roles():
+def get_roles():
     response = get_roles_in_db()
     return response
 
 @router.get("/roles/{role_name}", response_model=Role)
-async def get_role(role_name: str):
+def get_role(role_name: str):
     role = get_role_by_name(role_name)
     if role:
         return role
@@ -203,12 +203,12 @@ async def get_role(role_name: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
 
 @router.post('/roles', summary="Create new role", status_code=status.HTTP_201_CREATED, response_model=ResponseMessage)
-async def create_role(role_create: RoleCreate):
+def create_role(role_create: RoleCreate):
     inserted_id = insert_role_into_db(role_create)
     return {"message": "Role created successfully"}
 
 @router.put("/roles/{role_name}", response_model=ResponseMessage)
-async def update_role(role_name: str, role_create: RoleCreate):
+def update_role(role_name: str, role_create: RoleCreate):
     if role_name != role_create.name:
         msg = "Role name change not allowed"
         logger.warning(f"{msg}, role_name={role_name}, new_role_name={role_create.name}")
@@ -221,7 +221,7 @@ async def update_role(role_name: str, role_create: RoleCreate):
     return {"message": "Role information remains unchanged"}
 
 @router.delete("/roles/{role_name}", response_model=ResponseMessage)
-async def delete_role(role_name: str):
+def delete_role(role_name: str):
     result = delete_role_in_db(role_name)
     if result:
         return {"message": "Role deleted successfully"}
