@@ -59,7 +59,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
         logger.info(f"Request received for endpoint: {request.method} {request.url.path}")
         logger_access.info(f"Performing RBAC authorization check rid={idem}, {request.client.host}, {resource}, {action}")
 
-        if get_enforcer().enforce(get_setting().ROLE_SYSTEM, resource, action):
+        if action == "OPTIONS" or get_enforcer().enforce(get_setting().ROLE_SYSTEM, resource, action):
             logger_access.info(f"Proceed system API, rid={idem}")
             # Proceed with the request of system endpoints
             response = await call_next(request)
