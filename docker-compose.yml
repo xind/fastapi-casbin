@@ -22,7 +22,7 @@ services:
         depends_on:
             db:
                 condition: service_healthy
-        command: uvicorn main:app --host 0.0.0.0
+        command: uvicorn main:app --host 0.0.0.0 --forwarded-allow-ips='*'
 
     db:
         image: mongo:6.0.7
