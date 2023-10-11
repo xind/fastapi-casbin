@@ -167,7 +167,7 @@ def _upsert_user(user: UserCreate, user_id: str = None) -> UpdateResult:
     exclude_list = ['roles', 'icon_path']
     if user_id: # perform update
         exclude_list += ['username', 'password']
-    user_data = user.model_dump(exclude=exclude_list, exclude_none=True)
+    user_data = user.model_dump(exclude=exclude_list)
     user_data['disabled'] = False # TODO: not implemented yet
 
     try:
